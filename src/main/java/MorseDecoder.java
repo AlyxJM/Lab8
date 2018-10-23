@@ -49,7 +49,12 @@ public class MorseDecoder {
         /*
          * We should check the results of getNumFrames to ensure that they are safe to cast to int.
          */
-        int totalBinCount = (int) Math.ceil((double) inputFile.getNumFrames() / BIN_SIZE);
+        int totalBinCount;
+        if (inputFile.getNumFrames() >= 0) {
+            totalBinCount = (int) Math.ceil((double) inputFile.getNumFrames() / BIN_SIZE);
+        } else {
+            totalBinCount = 1;
+        }
         double[] returnBuffer = new double[totalBinCount];
 
         double[] sampleBuffer = new double[BIN_SIZE * inputFile.getNumChannels()];
@@ -78,16 +83,41 @@ public class MorseDecoder {
      * @return the Morse code string of dots, dashes, and spaces
      */
     private static String powerToDotDash(final double[] powerMeasurements) {
+        String returnString = "";
+        boolean isPower = false;
+        boolean wasPower = false;
+        boolean isSilence = false;
+        boolean wasSilence = true;
+        for (int i = 0; i < powerMeasurements.length; i++) {
+            if (powerMeasurements[i] >= POWER_THRESHOLD) {
+                wasPower = isPower;
+                isPower = true;
+                if (powerMeasurements[i] >= DASH_BIN_COUNT) {
+                    returnString += "-";
+                } else {
+                    returnString += ".";
+                }
+            } else {
+                wasSilence = isSilence;
+                isSilence = true;
+                returnString += " ";
+            }
+        }
         /*
          * There are four conditions to handle. Symbols should only be output when you see
          * transitions. You will also have to store how much power or silence you have seen.
          */
-
-        // if ispower and waspower
-        // else if ispower and not waspower
-        // else if issilence and wassilence
-        // else if issilence and not wassilence
-
+        if (isPower && wasPower) {
+            returnString += "";
+        } else if (isPower && !wasPower) {
+            return returnString;
+        } else if (isSilence && wasSilence) {
+            returnString += "";
+        } else if (isSilence & !wasSilence) {
+            return returnString;
+        } else {
+            return "";
+        }
         return "";
     }
 
